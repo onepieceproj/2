@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Zap, Target, AlertTriangle, CheckCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, ChartBar as BarChart3, Zap, Target, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle } from 'lucide-react';
 import { useTrading } from '../context/TradingContext';
 import ApiService from '../services/ApiService';
 import TradingService from '../services/TradingService';

@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  History, 
-  Filter, 
-  Download, 
-  Search, 
-  Calendar, 
-  TrendingUp, 
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
-  Eye,
-  MoreHorizontal
-} from 'lucide-react';
+import { History, ListFilter as Filter, Download, Search, Calendar, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Eye, MoveHorizontal as MoreHorizontal } from 'lucide-react';
 import EnchantedButton from '../components/EnchantedButton';
 import { useTrading } from '../context/TradingContext';
 import ApiService from '../services/ApiService';

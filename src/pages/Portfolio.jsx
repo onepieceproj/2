@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Wallet, 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  PieChart, 
-  BarChart3,
-  RefreshCw,
-  Eye,
-  EyeOff
-} from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, ChartPie as PieChart, ChartBar as BarChart3, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import EnchantedButton from '../components/EnchantedButton';
 import { useTrading } from '../context/TradingContext';
 

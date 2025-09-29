@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Zap, 
-  TrendingUp, 
-  TrendingDown, 
-  Play, 
-  Pause, 
-  Settings, 
-  AlertTriangle, 
-  CheckCircle,
-  Target,
-  BarChart3,
-  DollarSign,
-  Activity
-} from 'lucide-react';
+import { Zap, TrendingUp, TrendingDown, Play, Pause, Settings, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Target, ChartBar as BarChart3, DollarSign, Activity } from 'lucide-react';
 import EnchantedButton from '../components/EnchantedButton';
 import { useTrading } from '../context/TradingContext';
 import TradingService from '../services/TradingService';
