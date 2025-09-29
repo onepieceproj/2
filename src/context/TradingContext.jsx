@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useState } from 'react';
 import ApiService from '../services/ApiService';
 
 const TradingContext = createContext();
@@ -115,6 +116,37 @@ export const TradingProvider = ({ children }) => {
       };
     }
   }, [state.isAuthenticated]);
+
+  const loadInitialData = async () => {
+    try {
+      const [portfolioRes, signalsRes, tradesRes, marketRes] = await Promise.all([
+        ApiService.getPortfolio(),
+        ApiService.getActiveSignals(),
+        ApiService.getTrades(10),
+        ApiService.getMarketPrices(['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT'])
+      ]);
+
+      if (portfolioRes.success) {
+        dispatch({ type: 'SET_PORTFOLIO', payload: portfolioRes.data });
+      }
+      
+      if (signalsRes.success) {
+        dispatch({ type: 'SET_SIGNALS', payload: signalsRes.data });
+      }
+      
+      if (tradesRes.success) {
+        dispatch({ type: 'SET_TRADES', payload: tradesRes.data });
+      }
+
+      if (marketRes.success) {
+        dispatch({ type: 'SET_MARKET_DATA', payload: marketRes.data });
+      }
+      
+    } catch (error) {
+      console.error('Failed to load initial data:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    }
+  };
   const loadInitialData = async () => {
     try {
       const [portfolioRes, signalsRes, tradesRes, marketRes] = await Promise.all([

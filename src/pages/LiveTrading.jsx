@@ -102,18 +102,17 @@ const LiveTrading = () => {
     return `${hours}:${minutes}:${seconds}`;
   };
 
-  const toggleLiveMode = () => {
+  const toggleLiveMode = async () => {
     if (!isLiveMode) {
       // Start live trading
-      TradingService.startLiveTrading(autoTradeSettings)
-        .then(() => {
-          setIsLiveMode(true);
-          addToExecutionLog('Live Trading Started', 'SYSTEM', 'success');
-        })
-        .catch(error => {
-          console.error('Failed to start live trading:', error);
-          addToExecutionLog('Failed to start live trading: ' + error.message, 'SYSTEM', 'error');
-        });
+      try {
+        await TradingService.startLiveTrading(autoTradeSettings);
+        setIsLiveMode(true);
+        addToExecutionLog('Live Trading Started', 'SYSTEM', 'success');
+      } catch (error) {
+        console.error('Failed to start live trading:', error);
+        addToExecutionLog('Failed to start live trading: ' + error.message, 'SYSTEM', 'error');
+      }
     } else {
       // Stop live trading
       TradingService.stopLiveTrading();

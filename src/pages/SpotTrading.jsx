@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Zap, Target, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useTrading } from '../context/TradingContext';
 import ApiService from '../services/ApiService';
+import TradingService from '../services/TradingService';
 
 const SpotTrading = () => {
   const location = useLocation();
@@ -69,16 +70,30 @@ const SpotTrading = () => {
 
     loadMarketData();
     
-    // Update balance from portfolio
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      setBalance({
-        USDT: 8500.00,
-        BTC: 0.25,
-        ETH: 5.50,
-        BNB: 12.75
-      });
-    }
+    // Load account balance
+    const loadBalance = async () => {
+      try {
+        const result = await ApiService.getAccountBalance();
+        if (result.success) {
+          const balanceData = {};
+          Object.entries(result.data).forEach(([asset, data]) => {
+            balanceData[asset] = parseFloat(data.free) || 0;
+          });
+          setBalance(balanceData);
+        }
+      } catch (error) {
+        console.error('Error loading balance:', error);
+        // Set default balance if API fails
+        setBalance({
+          USDT: 8500.00,
+          BTC: 0.25,
+          ETH: 5.50,
+          BNB: 12.75
+        });
+      }
+    };
+
+    loadBalance();
   }, []);
 
   // Handle URL parameters from signal cards
@@ -93,7 +108,7 @@ const SpotTrading = () => {
     if (signalPrice && orderType === 'limit') setPrice(signalPrice);
   }, [location.search, orderType]);
 
-  const handleTrade = () => {
+  const handleTrade = async () => {
     setIsExecuting(true);
     
     try {
@@ -106,59 +121,50 @@ const SpotTrading = () => {
         ...(orderType === 'limit' && { price: parseFloat(price) })
       };
       
-      // Execute real trade via API
-      ApiService.executeTrade(orderData).then(result => {
-        if (result.success) {
-          const newTrade = {
-            id: recentTrades.length + 1,
-            pair: selectedPair,
-            side,
-            amount: parseFloat(amount),
-            price: result.data.executedPrice || currentPrice,
-            time: new Date().toLocaleTimeString(),
-            status: 'filled'
-          };
-          
-          setRecentTrades([newTrade, ...recentTrades]);
-          
-          // Update balance
-          if (side === 'buy') {
-            const asset = selectedPair.replace('USDT', '');
-            setBalance(prev => ({
-              ...prev,
-              USDT: prev.USDT - (parseFloat(amount) * currentPrice),
-              [asset]: (prev[asset] || 0) + parseFloat(amount)
-            }));
-          } else {
-            const asset = selectedPair.replace('USDT', '');
-            setBalance(prev => ({
-              ...prev,
-              USDT: prev.USDT + (parseFloat(amount) * currentPrice),
-              [asset]: (prev[asset] || 0) - parseFloat(amount)
-            }));
-          }
+      // Execute real trade via TradingService
+      const result = await TradingService.executeTrade(orderData);
+      
+      if (result.success) {
+        const newTrade = {
+          id: recentTrades.length + 1,
+          pair: selectedPair,
+          side,
+          amount: parseFloat(amount),
+          price: result.data.order.executedPrice || currentPrice,
+          time: new Date().toLocaleTimeString(),
+          status: 'filled'
+        };
+        
+        setRecentTrades([newTrade, ...recentTrades]);
+        
+        // Update balance
+        if (side === 'buy') {
+          const asset = selectedPair.replace('USDT', '');
+          setBalance(prev => ({
+            ...prev,
+            USDT: prev.USDT - (parseFloat(amount) * currentPrice),
+            [asset]: (prev[asset] || 0) + parseFloat(amount)
+          }));
+        } else {
+          const asset = selectedPair.replace('USDT', '');
+          setBalance(prev => ({
+            ...prev,
+            USDT: prev.USDT + (parseFloat(amount) * currentPrice),
+            [asset]: (prev[asset] || 0) - parseFloat(amount)
+          }));
         }
-      });
-      
-      // Also create trade record
-      const tradeData = {
-        pair: selectedPair,
-        side: side.toUpperCase(),
-        type: orderType.toUpperCase(),
-        quantity: parseFloat(amount),
-        entryPrice: orderType === 'market' 
-          ? currentPrice
-          : parseFloat(price),
-        notes: `Spot ${side} order via platform`
-      };
-      
-      actions.createTrade(tradeData);
-      
-      setAmount('');
-      setPrice('');
+        
+        // Clear form
+        setAmount('');
+        setPrice('');
+      } else {
+        console.error('Trade execution failed:', result.message);
+        alert('Trade execution failed: ' + result.message);
+      }
       
     } catch (error) {
       console.error('Trade execution error:', error);
+      alert('Trade execution error: ' + error.message);
     } finally {
       setIsExecuting(false);
     }

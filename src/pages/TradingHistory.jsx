@@ -14,8 +14,11 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import EnchantedButton from '../components/EnchantedButton';
+import { useTrading } from '../context/TradingContext';
+import ApiService from '../services/ApiService';
 
 const TradingHistory = () => {
+  const { trades: contextTrades } = useTrading();
   const [trades, setTrades] = useState([
     {
       id: 'TXN001',
@@ -73,6 +76,35 @@ const TradingHistory = () => {
   const [sortBy, setSortBy] = useState('timestamp');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  // Load trades from API
+  useEffect(() => {
+    const loadTrades = async () => {
+      try {
+        const result = await ApiService.getTrades(100);
+        if (result.success && result.data.length > 0) {
+          const formattedTrades = result.data.map(trade => ({
+            id: trade.trade_id || `TXN${trade.id}`,
+            symbol: trade.pair,
+            type: trade.side,
+            side: trade.side,
+            amount: trade.quantity,
+            entryPrice: trade.entry_price,
+            exitPrice: trade.exit_price,
+            pnl: trade.realized_pnl || 0,
+            pnlPercentage: trade.pnl_percentage || 0,
+            status: trade.status,
+            timestamp: trade.created_at,
+            duration: trade.duration_minutes ? `${trade.duration_minutes} min` : 'Active'
+          }));
+          setTrades(formattedTrades);
+        }
+      } catch (error) {
+        console.error('Error loading trades:', error);
+      }
+    };
+
+    loadTrades();
+  }, [contextTrades]);
   const filteredTrades = trades.filter(trade => {
     const matchesSearch = trade.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          trade.id.toLowerCase().includes(searchTerm.toLowerCase());

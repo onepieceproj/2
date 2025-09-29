@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Plus, Trash2, CreditCard as Edit3, TrendingUp, TrendingDown, Target, Zap, Clock, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle } from 'lucide-react';
+import ApiService from '../services/ApiService';
 
 const Alerts = () => {
   const [alerts, setAlerts] = useState([
@@ -64,7 +65,22 @@ const Alerts = () => {
     macd: ['bullish_cross', 'bearish_cross']
   };
 
-  const createAlert = () => {
+  // Load alerts from API
+  useEffect(() => {
+    const loadAlerts = async () => {
+      try {
+        const result = await ApiService.getAlerts();
+        if (result.success) {
+          setAlerts(result.data);
+        }
+      } catch (error) {
+        console.error('Error loading alerts:', error);
+      }
+    };
+
+    loadAlerts();
+  }, []);
+  const createAlert = async () => {
     if (!newAlert.value) return;
     
     try {
@@ -75,34 +91,33 @@ const Alerts = () => {
       };
       
       // Call API to create alert
-      ApiService.createAlert(alertData).then(result => {
-        if (result.success) {
-          const alert = {
-            id: alerts.length + 1,
-            ...newAlert,
-            value: parseFloat(newAlert.value),
-            status: 'active',
-            createdAt: new Date().toLocaleString(),
-            triggered: false
-          };
-          
-          setAlerts([...alerts, alert]);
-          setNewAlert({ symbol: 'BTCUSDT', type: 'price', condition: 'above', value: '' });
-          setIsCreating(false);
-        }
-      });
+      const result = await ApiService.createAlert(alertData);
+      
+      if (result.success) {
+        const alert = {
+          id: alerts.length + 1,
+          ...newAlert,
+          value: parseFloat(newAlert.value),
+          status: 'active',
+          createdAt: new Date().toLocaleString(),
+          triggered: false
+        };
+        
+        setAlerts([...alerts, alert]);
+        setNewAlert({ symbol: 'BTCUSDT', type: 'price', condition: 'above', value: '' });
+        setIsCreating(false);
+      }
     } catch (error) {
       console.error('Error creating alert:', error);
     }
   };
 
-  const deleteAlert = (id) => {
+  const deleteAlert = async (id) => {
     try {
-      ApiService.deleteAlert(id).then(result => {
-        if (result.success) {
-          setAlerts(alerts.filter(alert => alert.id !== id));
-        }
-      });
+      const result = await ApiService.deleteAlert(id);
+      if (result.success) {
+        setAlerts(alerts.filter(alert => alert.id !== id));
+      }
     } catch (error) {
       console.error('Error deleting alert:', error);
     }

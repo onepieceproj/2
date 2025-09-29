@@ -12,6 +12,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import EnchantedButton from '../components/EnchantedButton';
+import { useTrading } from '../context/TradingContext';
 
 const Portfolio = () => {
   const { portfolio: contextPortfolio, isLoading, actions } = useTrading();

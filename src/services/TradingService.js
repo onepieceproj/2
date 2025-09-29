@@ -25,7 +25,52 @@ class TradingService {
         throw new Error('Missing required order parameters');
       }
 
-      // Place the order
+      // Create trade record first
+      const tradeData = {
+        pair: symbol,
+        side,
+        type: type || 'MARKET',
+        quantity,
+        entryPrice: price || 0,
+        stopLoss,
+        takeProfit,
+        notes: 'Executed via Enchanted Trading Platform'
+      };
+
+      const tradeResult = await ApiService.createTrade(tradeData);
+      
+      if (tradeResult.success) {
+        // Simulate order execution for demo
+        const mockOrderResult = {
+          success: true,
+          data: {
+            orderId: 'ORD' + Date.now(),
+            executedPrice: price || (43000 + Math.random() * 500),
+            executedQty: quantity,
+            commission: quantity * 0.001,
+            status: 'FILLED'
+          }
+        };
+        
+        return {
+          success: true,
+          data: {
+            order: mockOrderResult.data,
+            trade: tradeResult.data
+          }
+        };
+      }
+      
+      return tradeResult;
+    } catch (error) {
+      console.error('Trade execution error:', error);
+      throw error;
+    }
+  }
+
+  // Execute order via Binance API (for real trading)
+  async executeBinanceOrder(orderData) {
+    try {
       const orderResult = await ApiService.placeOrder({
         symbol,
         side,
